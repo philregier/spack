@@ -640,8 +640,12 @@ class Database(object):
         # TODO: fix this before we support multiple install locations.
         database = {
             'database': {
+                # TODO: move this to a top-level _meta section if we ever
+                # TODO: bump the DB version to 7
+                'version': str(_db_version),
+
+                # dictionary of installation records, keyed by DAG hash
                 'installs': installs,
-                'version': str(_db_version)
             }
         }
 
