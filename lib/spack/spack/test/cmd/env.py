@@ -1117,11 +1117,11 @@ def test_store_different_build_deps():
         x_spec = Spec('x ^z@2')
         x_concretized = x_spec.concretized()
 
-        # Even though x chose a different 'z', it should choose the same y
-        # according to the DAG hash (since build deps are excluded from
-        # comparison by default). Although the dag hashes are equal, the specs
-        # are not considered equal because they compare build deps.
-        assert x_concretized['y'].runtime_hash() == y_concretized.runtime_hash()
+        # Even though x chose a different 'z', the y it chooses should be identical
+        # *aside* from the dependency on 'z'.  The dag_hash() will show the difference
+        # in build dependencies.
+        assert x_concretized['y'].eq_node(y_concretized)
+        assert x_concretized['y'].dag_hash() != y_concretized.dag_hash()
 
         _env_create('test', with_view=False)
         e = ev.read('test')
@@ -1136,7 +1136,13 @@ def test_store_different_build_deps():
         y_read = e_read.specs_by_hash[y_env_hash]
         x_read = e_read.specs_by_hash[x_env_hash]
 
+        # make sure the DAG hashes and build deps are preserved after
+        # a round trip to/from the lockfile
         assert x_read['z'] != y_read['z']
+        assert x_read['z'].dag_hash() != y_read['z'].dag_hash()
+
+        assert x_read['y'].eq_node(y_read)
+        assert x_read['y'].dag_hash() != y_read.dag_hash()
 
 
 def test_env_updates_view_install(
